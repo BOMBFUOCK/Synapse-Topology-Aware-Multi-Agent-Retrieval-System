@@ -146,18 +146,21 @@ Synapse是一个创新的多智能体信息检索系统，通过构建智能体�
 ### 启动依赖服务
 
 ```bash
-# 启动所有测试数据库（使用Docker Compose）
-./start_test_databases.sh
+# 启动所需数据库（使用Docker Compose）
+docker-compose up -d
 ```
 
 ### 运行示例
 
 ```bash
 # 安装依赖
-pip install -r requirements.txt
+./venv/bin/python3 -m pip install -r requirements.txt
+
+# 安装额外的SOCKS支持（Qdrant客户端需要）
+./venv/bin/python3 -m pip install 'httpx[socks]'
 
 # 运行主程序
-python main.py
+./venv/bin/python3 main.py
 ```
 
 ### 基本使用
@@ -333,7 +336,7 @@ agent_a.feedback("Market_Analyst", is_useful=True)
 ```
 ┌────────────────────────────────────────────────────────────┐
 │  1. 启动服务                                               │
-│  ./start_test_databases.sh                                 │
+│  docker-compose up -d                                     │
 └───────────┬────────────────────────────────────────────────┘
             │
 ┌───────────▼────────────────────────────────────────────────┐
@@ -398,7 +401,7 @@ agent_a.feedback("Market_Analyst", is_useful=True)
 ## 项目结构
 
 ```
-syn/
+synapse/
 ├── main.py              # 主程序，演示系统功能
 ├── synapse/
 │   ├── api.py           # Agent API定义
@@ -411,19 +414,19 @@ syn/
 │   │   └── feedback/    # 反馈机制
 │   └── utils/           # 工具函数
 ├── datasets.py          # 智能体知识库
-├── test_databases.py    # 数据库测试脚本
-├── docker-compose-all-dbs.yml  # 所有数据库的Docker配置
-├── start_test_databases.sh     # 启动测试数据库脚本
+├── docker-compose.yml   # 所需数据库的Docker配置
 └── requirements.txt     # 项目依赖
 ```
 
 ## 测试框架
 
-系统提供了完整的数据库测试框架：
+系统在 `main.py` 中包含内置测试机制，演示：
 
-- 支持8种不同数据库的性能测试
-- 测试指标包括：向量查询时间、关系查询时间、存储效率等
-- 提供详细的测试报告和对比分析
+- 智能体创建与网络构建
+- 知识学习与存储
+- 涟漪搜索功能
+- 反馈机制与动态权重调整
+- 多轮检索与结果评估
 
 ## 未来展望
 
