@@ -1,80 +1,19 @@
-<div class="language-switcher">
-  <button id="cn-btn" class="active">中文</button>
-  <button id="en-btn">English</button>
+<div align="center">
+  <a href="#中文" style="padding: 8px 16px; margin: 0 8px; background-color: #2563eb; color: white; border-radius: 4px; text-decoration: none;">中文</a>
+  <a href="#English" style="padding: 8px 16px; margin: 0 8px; background-color: #f3f4f6; color: #374151; border: 1px solid #e5e7eb; border-radius: 4px; text-decoration: none;">English</a>
 </div>
 
-<script>
-const cnBtn = document.getElementById('cn-btn');
-const enBtn = document.getElementById('en-btn');
-const cnContent = document.querySelectorAll('.cn');
-const enContent = document.querySelectorAll('.en');
+<hr>
 
-cnBtn.addEventListener('click', () => {
-  cnContent.forEach(el => el.style.display = 'block');
-  enContent.forEach(el => el.style.display = 'none');
-  cnBtn.classList.add('active');
-  enBtn.classList.remove('active');
-});
+<h2 id="中文">Synapse 多智能体信息检索系统</h2>
 
-enBtn.addEventListener('click', () => {
-  cnContent.forEach(el => el.style.display = 'none');
-  enContent.forEach(el => el.style.display = 'block');
-  enBtn.classList.add('active');
-  cnBtn.classList.remove('active');
-});
+<div id="中文-content">
 
-// 初始化显示中文
-cnContent.forEach(el => el.style.display = 'block');
-enContent.forEach(el => el.style.display = 'none');
-</script>
-
-<style>
-.language-switcher {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
-}
-
-.language-switcher button {
-  background-color: #f3f4f6;
-  border: 1px solid #e5e7eb;
-  border-radius: 4px;
-  padding: 8px 16px;
-  cursor: pointer;
-  font-size: 14px;
-  transition: all 0.2s;
-}
-
-.language-switcher button.active {
-  background-color: #2563eb;
-  color: white;
-  border-color: #2563eb;
-}
-
-.language-switcher button:hover {
-  background-color: #e5e7eb;
-}
-
-.language-switcher button.active:hover {
-  background-color: #1d4ed8;
-}
-</style>
-
-<div class="cn">
 # Synapse 多智能体信息检索系统
 
 ## 项目概述
 Synapse是一个创新的多智能体信息检索系统，通过构建智能体网络和采用涟漪搜索算法，实现了高效、智能的信息检索。该系统将传统的单一检索模式升级为多智能体协作模式，模拟人类社交网络的信息传播方式，提高了信息检索的相关性和可靠性。
-</div>
 
-<div class="en">
-# Synapse Multi-Agent Information Retrieval System
-
-## Project Overview
-Synapse is an innovative multi-agent information retrieval system that achieves efficient and intelligent information retrieval by building agent networks and adopting a ripple search algorithm. This system upgrades the traditional single retrieval mode to a multi-agent collaborative mode, simulating the information dissemination method of human social networks, and improving the relevance and reliability of information retrieval.
-</div>
-
-<div class="cn">
 ## 核心功能
 
 ### 1. 多智能体网络构建
@@ -485,7 +424,17 @@ Synapse多智能体信息检索系统通过创新的涟漪搜索算法和动态�
 联系人：your-email@example.com
 </div>
 
-<div class="en">
+<hr>
+
+<h2 id="English">Synapse Multi-Agent Information Retrieval System</h2>
+
+<div id="English-content">
+
+# Synapse Multi-Agent Information Retrieval System
+
+## Project Overview
+Synapse is an innovative multi-agent information retrieval system that achieves efficient and intelligent information retrieval by building agent networks and adopting a ripple search algorithm. This system upgrades the traditional single retrieval mode to a multi-agent collaborative mode, simulating the information dissemination method of human social networks, and improving the relevance and reliability of information retrieval.
+
 ## Core Features
 
 ### 1. Multi-Agent Network Construction
