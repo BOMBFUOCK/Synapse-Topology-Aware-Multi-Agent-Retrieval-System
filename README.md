@@ -6,6 +6,10 @@
   <img src="https://img.shields.io/github/issues-closed/BOMBFUOCK/Multi-Agent-RAG-Synapse" alt="GitHub Closed Issues" />
 </div>
 
+<div align="center">
+  <a href="README_CN.md">中文版本</a> | English Version
+</div>
+
 # Synapse Multi-Agent Information Retrieval System
 
 ## Project Overview
