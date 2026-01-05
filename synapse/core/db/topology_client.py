@@ -56,6 +56,17 @@ class TopologyClient:
             all_links[source_id] = {k: float(v) for k, v in neighbors.items()}
         return all_links
 
+    def get_all_agents(self) -> List[str]:
+        agents = set()
+        pattern = "topology:*"
+        for key in self.client.scan_iter(match=pattern):
+            source_id = key.replace("topology:", "")
+            agents.add(source_id)
+            neighbors = self.client.hgetall(key)
+            for neighbor_id in neighbors:
+                agents.add(neighbor_id)
+        return list(agents)
+
     def clear_all(self):
         pattern = "topology:*"
         for key in self.client.scan_iter(match=pattern):

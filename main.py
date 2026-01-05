@@ -38,6 +38,25 @@ def main():
     print(f"✓ 创建了智能体: {agent_b}")
     print(f"✓ 创建了智能体: {agent_c}")
     
+    print("\n设置智能体画像:")
+    agent_a.set_profile(
+        description="金融专家智能体，专注于股票、债券、基金等金融产品的分析和建议。",
+        keywords=["股票", "债券", "基金", "金融分析", "投资建议"]
+    )
+    print(f"  ✓ 为 {agent_a} 设置了画像")
+    
+    agent_b.set_profile(
+        description="市场分析师智能体，擅长分析市场趋势、行业动态和公司财报。",
+        keywords=["市场分析", "行业动态", "公司财报", "趋势预测", "数据分析"]
+    )
+    print(f"  ✓ 为 {agent_b} 设置了画像")
+    
+    agent_c.set_profile(
+        description="新闻聚合智能体，实时收集和整理各类新闻资讯，包括财经、科技、体育等。",
+        keywords=["新闻聚合", "实时资讯", "财经新闻", "科技新闻", "体育新闻"]
+    )
+    print(f"  ✓ 为 {agent_c} 设置了画像")
+    
     print("\n加载智能体知识库:")
     load_agent_knowledge(agent_a, "Finance_Bot")
     load_agent_knowledge(agent_b, "Market_Analyst")
@@ -122,6 +141,32 @@ def main():
     for neighbor_id, weight in neighbors.items():
         print(f"  - {neighbor_id}: {weight:.2f}")
     
+    print_section("步骤 7: 测试无结果时返回智能体画像")
+    
+    # 创建一个新的智能体，不加载任何知识，确保不会有匹配结果
+    agent_d = Agent("Empty_Agent")
+    agent_d.set_profile(
+        description="空智能体，没有任何知识。",
+        keywords=["空智能体", "无知识", "测试用"]
+    )
+    print(f"✓ 创建了空智能体: {agent_d}")
+    
+    # 建立与空智能体的连接
+    agent_a.connect("Empty_Agent", 0.8)
+    print(f"✓ 建立了与空智能体的连接")
+    
+    # 向空智能体提问，确保不会有匹配结果
+    question4 = "测试空智能体的智能体画像返回"
+    print(f"\n问题: {question4}")
+    
+    results4 = agent_d.ask(question4, limit=3)
+    print(f"\n检索结果 (共 {len(results4)} 条):")
+    for i, result in enumerate(results4, 1):
+        print(f"\n  结果 {i}:")
+        print(f"    内容: {result.content}")
+        print(f"    来源: {result.source_agent_id}")
+        print(f"    相似度: {result.score:.4f}")
+    
     print_section("测试完成")
     
     print("\n✓ 所有测试通过!")
@@ -130,6 +175,7 @@ def main():
     print("  ✓ 涟漪检索 (强关系优先)")
     print("  ✓ 动态权重更新")
     print("  ✓ 简单易用的 Agent API")
+    print("  ✓ 智能体画像功能")
 
 
 if __name__ == "__main__":

@@ -1,5 +1,6 @@
 import yaml
-from typing import List, Optional
+import redis
+from typing import List, Optional, Dict
 from dataclasses import dataclass
 from synapse.core.db import VectorDBClient, TopologyClient
 from synapse.utils import get_embedding
@@ -26,6 +27,22 @@ class RippleSearcher:
         self.low_trust_threshold = retrieval_config['low_trust_threshold']
         self.high_confidence_threshold = retrieval_config['high_confidence_threshold']
         self.default_limit = retrieval_config['default_limit']
+        
+        # Redis client for agent profiles
+        redis_config = config['redis']
+        self.redis_client = redis.Redis(
+            host=redis_config['host'],
+            port=redis_config['port'],
+            db=redis_config['db'],
+            decode_responses=True
+        )
+    
+    def _get_agent_profile(self, agent_id: str) -> Dict:
+        profile_key = f"agent:profile:{agent_id}"
+        profile = self.redis_client.hgetall(profile_key)
+        if profile:
+            profile['keywords'] = profile['keywords'].split(',') if profile.get('keywords') else []
+        return profile or {"description": "No description available", "keywords": []}
 
     def search(self, query_text: str, source_agent_id: str, limit: Optional[int] = None) -> List[SearchResult]:
         limit = limit or self.default_limit
@@ -56,14 +73,27 @@ class RippleSearcher:
         
         if group_b:
             results = self.vector_client.query_memory(query_vector, group_b, limit)
-            return [SearchResult(
-                content=r['content'],
-                source_agent_id=r['owner_id'],
-                score=r['score'],
-                metadata=r.get('metadata')
-            ) for r in results]
+            if results:
+                return [SearchResult(
+                    content=r['content'],
+                    source_agent_id=r['owner_id'],
+                    score=r['score'],
+                    metadata=r.get('metadata')
+                ) for r in results]
         
-        return []
+        # If no results, return agent profiles
+        all_agents = self.topology_client.get_all_agents()
+        profile_results = []
+        for agent_id in all_agents:
+            profile = self._get_agent_profile(agent_id)
+            content = f"智能体: {agent_id}\n简介: {profile['description']}\n关键词: {', '.join(profile['keywords'])}"
+            profile_results.append(SearchResult(
+                content=content,
+                source_agent_id=agent_id,
+                score=0.0,
+                metadata={"type": "agent_profile"}
+            ))
+        return profile_results
 
     def search_with_details(self, query_text: str, source_agent_id: str, limit: Optional[int] = None) -> dict:
         limit = limit or self.default_limit
@@ -108,13 +138,28 @@ class RippleSearcher:
             results = self.vector_client.query_memory(query_vector, group_b, limit)
             details['round'] = 2
             details['searched_ids'] = group_b
-            details['results'] = [SearchResult(
-                content=r['content'],
-                source_agent_id=r['owner_id'],
-                score=r['score'],
-                metadata=r.get('metadata')
-            ) for r in results]
-            return details
+            if results:
+                details['results'] = [SearchResult(
+                    content=r['content'],
+                    source_agent_id=r['owner_id'],
+                    score=r['score'],
+                    metadata=r.get('metadata')
+                ) for r in results]
+                return details
+        
+        # If no results, return agent profiles
+        all_agents = self.topology_client.get_all_agents()
+        profile_results = []
+        for agent_id in all_agents:
+            profile = self._get_agent_profile(agent_id)
+            content = f"智能体: {agent_id}\n简介: {profile['description']}\n关键词: {', '.join(profile['keywords'])}"
+            profile_results.append(SearchResult(
+                content=content,
+                source_agent_id=agent_id,
+                score=0.0,
+                metadata={"type": "agent_profile"}
+            ))
         
         details['searched_ids'] = []
+        details['results'] = profile_results
         return details
