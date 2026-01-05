@@ -1,3 +1,11 @@
+<div align="center">
+  <img src="https://img.shields.io/github/stars/BOMBFUOCK/Multi-Agent-RAG-Synapse?style=social" alt="GitHub Stars" />
+  <img src="https://img.shields.io/github/forks/BOMBFUOCK/Multi-Agent-RAG-Synapse?style=social" alt="GitHub Forks" />
+  <img src="https://img.shields.io/github/watchers/BOMBFUOCK/Multi-Agent-RAG-Synapse?style=social" alt="GitHub Watchers" />
+  <img src="https://img.shields.io/github/issues/BOMBFUOCK/Multi-Agent-RAG-Synapse" alt="GitHub Issues" />
+  <img src="https://img.shields.io/github/issues-closed/BOMBFUOCK/Multi-Agent-RAG-Synapse" alt="GitHub Closed Issues" />
+</div>
+
 # Synapse 多智能体信息检索系统
 
 ## 项目概述
@@ -424,6 +432,24 @@ syn/
 ## 总结
 
 Synapse多智能体信息检索系统通过创新的涟漪搜索算法和动态信任关系网络，实现了比传统检索模式更高效、更智能的信息检索。该系统具有良好的扩展性和适应性，可广泛应用于各种专业领域和复杂信息检索场景。
+
+---
+
+## Star 历史
+
+<div align="center">
+  <a href="https://star-history.com/#BOMBFUOCK/Multi-Agent-RAG-Synapse&Date">
+    <img src="https://api.star-history.com/svg?repos=BOMBFUOCK/Multi-Agent-RAG-Synapse&type=Date" alt="Star History Chart" width="800" height="800">
+  </a>
+</div>
+
+## 贡献者
+
+<div align="center">
+  <a href="https://github.com/BOMBFUOCK/Multi-Agent-RAG-Synapse/graphs/contributors">
+    <img src="https://contrib.rocks/image?repo=BOMBFUOCK/Multi-Agent-RAG-Synapse" alt="Contributors" />
+  </a>
+</div>
 
 ---
 

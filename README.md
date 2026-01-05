@@ -1,3 +1,11 @@
+<div align="center">
+  <img src="https://img.shields.io/github/stars/BOMBFUOCK/Multi-Agent-RAG-Synapse?style=social" alt="GitHub Stars" />
+  <img src="https://img.shields.io/github/forks/BOMBFUOCK/Multi-Agent-RAG-Synapse?style=social" alt="GitHub Forks" />
+  <img src="https://img.shields.io/github/watchers/BOMBFUOCK/Multi-Agent-RAG-Synapse?style=social" alt="GitHub Watchers" />
+  <img src="https://img.shields.io/github/issues/BOMBFUOCK/Multi-Agent-RAG-Synapse" alt="GitHub Issues" />
+  <img src="https://img.shields.io/github/issues-closed/BOMBFUOCK/Multi-Agent-RAG-Synapse" alt="GitHub Closed Issues" />
+</div>
+
 # Synapse Multi-Agent Information Retrieval System
 
 ## Project Overview
@@ -424,6 +432,24 @@ The system provides a complete database testing framework:
 ## Summary
 
 The Synapse Multi-Agent Information Retrieval System achieves more efficient and intelligent information retrieval than traditional retrieval models through its innovative ripple search algorithm and dynamic trust relationship network. The system has good scalability and adaptability, and can be widely applied in various professional fields and complex information retrieval scenarios.
+
+---
+
+## Star History
+
+<div align="center">
+  <a href="https://star-history.com/#BOMBFUOCK/Multi-Agent-RAG-Synapse&Date">
+    <img src="https://api.star-history.com/svg?repos=BOMBFUOCK/Multi-Agent-RAG-Synapse&type=Date" alt="Star History Chart" width="800" height="800">
+  </a>
+</div>
+
+## Contributors
+
+<div align="center">
+  <a href="https://github.com/BOMBFUOCK/Multi-Agent-RAG-Synapse/graphs/contributors">
+    <img src="https://contrib.rocks/image?repo=BOMBFUOCK/Multi-Agent-RAG-Synapse" alt="Contributors" />
+  </a>
+</div>
 
 ---
 
