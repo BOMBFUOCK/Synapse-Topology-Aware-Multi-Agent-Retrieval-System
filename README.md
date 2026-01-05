@@ -421,7 +421,7 @@ Synapse多智能体信息检索系统通过创新的涟漪搜索算法和动态�
 ---
 
 项目地址：https://github.com/BOMBFUOCK/Synapse-Topology-Aware-Multi-Agent-Retrieval-System.git
-联系人：your-email@example.com
+联系人：ykd1374991239@163.com
 </div>
 
 <hr>
@@ -838,5 +838,5 @@ The Synapse Multi-Agent Information Retrieval System achieves more efficient and
 ---
 
 Project Address: https://github.com/BOMBFUOCK/Synapse-Topology-Aware-Multi-Agent-Retrieval-System.git
-Contact: your-email@example.com
+Contact: ykd1374991239@163.com
 </div>
