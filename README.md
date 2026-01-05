@@ -74,8 +74,6 @@ Synapse是一个创新的多智能体信息检索系统，通过构建智能体�
 Synapse is an innovative multi-agent information retrieval system that achieves efficient and intelligent information retrieval by building agent networks and adopting a ripple search algorithm. This system upgrades the traditional single retrieval mode to a multi-agent collaborative mode, simulating the information dissemination method of human social networks, and improving the relevance and reliability of information retrieval.
 </div>
 
-</div>
-
 <div class="cn">
 ## 核心功能
 
