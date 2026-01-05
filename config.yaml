@@ -1,0 +1,26 @@
+redis:
+  host: localhost
+  port: 6379
+  db: 0
+
+qdrant:
+  host: localhost
+  port: 6333
+  collection_name: synapse_memories
+
+embedding:
+  model_name: all-MiniLM-L6-v2
+  use_openai: false
+
+retrieval:
+  high_trust_threshold: 0.8
+  low_trust_threshold: 0.3
+  high_confidence_threshold: 0.85
+  default_limit: 10
+
+weight:
+  positive_increment: 0.05
+  negative_decrement: 0.1
+  decay_rate: 0.98
+  min_weight: 0.0
+  max_weight: 1.0
