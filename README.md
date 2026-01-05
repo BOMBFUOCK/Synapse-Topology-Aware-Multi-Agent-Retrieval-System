@@ -417,7 +417,7 @@ The Synapse Multi-Agent Information Retrieval System achieves more efficient and
 
 ---
 
-Project Address: https://github.com/BOMBFUOCK/Synapse-Topology-Aware-Multi-Agent-Retrieval-System.git
+Project Address: https://github.com/BOMBFUOCK/Multi-Agent-RAG-Synapse.git
 Contact: ykd1374991239@163.com
 </div>
 
@@ -838,6 +838,6 @@ Synapse多智能体信息检索系统通过创新的涟漪搜索算法和动态�
 
 ---
 
-项目地址：https://github.com/BOMBFUOCK/Synapse-Topology-Aware-Multi-Agent-Retrieval-System.git
+项目地址：https://github.com/BOMBFUOCK/Multi-Agent-RAG-Synapse.git
 联系人：ykd1374991239@163.com
 </div>
