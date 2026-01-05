@@ -847,6 +847,14 @@ syn/
 ## 总结
 Synapse多智能体信息检索系统通过创新的涟漪搜索算法和动态信任关系网络，实现了比传统检索模式更高效、更智能的信息检索。该系统具有良好的扩展性和适应性，可广泛应用于各种专业领域和复杂信息检索场景。
 
+## 贡献者
+
+<div align="center">
+  <a href="https://github.com/BOMBFUOCK/Multi-Agent-RAG-Synapse/graphs/contributors">
+    <img src="https://contrib.rocks/image?repo=BOMBFUOCK/Multi-Agent-RAG-Synapse" alt="Contributors" />
+  </a>
+</div>
+
 ---
 
 项目地址：https://github.com/BOMBFUOCK/Multi-Agent-RAG-Synapse.git
