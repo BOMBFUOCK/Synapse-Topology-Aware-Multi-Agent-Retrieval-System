@@ -130,34 +130,33 @@ The system provides professional domain knowledge bases for each agent, includin
 ### Vector Databases
 
 1. Qdrant
-2. Milvus
-3. Weaviate
-4. ChromaDB
-5. pgvector
+
 
 ### Topology/Graph Databases
 
 1. Redis
-2. Neo4j
-3. ArangoDB
+
 
 ## Quick Start
 
 ### Start Dependent Services
 
 ```bash
-# Start all test databases using Docker Compose
-./start_test_databases.sh
+# Start required databases using Docker Compose
+docker-compose up -d
 ```
 
 ### Run Example
 
 ```bash
 # Install dependencies
-pip install -r requirements.txt
+./venv/bin/python3 -m pip install -r requirements.txt
+
+# Install additional SOCKS support (required for Qdrant client)
+./venv/bin/python3 -m pip install 'httpx[socks]'
 
 # Run the main program
-python main.py
+./venv/bin/python3 main.py
 ```
 
 ### Basic Usage
@@ -333,7 +332,7 @@ agent_a.feedback("Market_Analyst", is_useful=True)
 ```
 ┌────────────────────────────────────────────────────────────┐
 │  1. Start Services                                         │
-│  ./start_test_databases.sh                                │
+│  docker-compose up -d                                     │
 └───────────┬────────────────────────────────────────────────┘
             │
 ┌───────────▼────────────────────────────────────────────────┐
@@ -398,7 +397,7 @@ agent_a.feedback("Market_Analyst", is_useful=True)
 ## Project Structure
 
 ```
-syn/
+synapse/
 ├── main.py              # Main program, demonstrating system functionality
 ├── synapse/
 │   ├── api.py           # Agent API definition
@@ -411,19 +410,19 @@ syn/
 │   │   └── feedback/    # Feedback mechanism
 │   └── utils/           # Utility functions
 ├── datasets.py          # Agent knowledge base
-├── test_databases.py    # Database test script
-├── docker-compose-all-dbs.yml  # Docker configuration for all databases
-├── start_test_databases.sh     # Script to start test databases
+├── docker-compose.yml   # Docker configuration for required databases
 └── requirements.txt     # Project dependencies
 ```
 
 ## Testing Framework
 
-The system provides a complete database testing framework:
+The system includes a built-in test mechanism in `main.py` that demonstrates:
 
-- Supports performance testing of 8 different databases
-- Test metrics include: vector query time, relationship query time, storage efficiency, etc.
-- Provides detailed test reports and comparative analysis
+- Agent creation and network construction
+- Knowledge learning and storage
+- Ripple search functionality
+- Feedback mechanism and dynamic weight adjustment
+- Multi-round retrieval and result evaluation
 
 ## Future Outlook
 
