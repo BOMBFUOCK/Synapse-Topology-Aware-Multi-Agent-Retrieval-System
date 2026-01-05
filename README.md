@@ -11,13 +11,17 @@
   <img src="https://img.shields.io/github/issues-closed/BOMBFUOCK/Multi-Agent-RAG-Synapse" alt="GitHub Closed Issues" />
 </div>
 
+<div align="center">
+  <a href="https://star-history.com/#BOMBFUOCK/Multi-Agent-RAG-Synapse&Date">
+    <img src="https://api.star-history.com/svg?repos=BOMBFUOCK/Multi-Agent-RAG-Synapse&type=Date" alt="Star History Chart" width="800" height="300">
+  </a>
+</div>
+
 <hr>
 
 <h2 id="English">Synapse Multi-Agent Information Retrieval System</h2>
 
 <div id="English-content">
-
-# Synapse Multi-Agent Information Retrieval System
 
 ## Project Overview
 Synapse is an innovative multi-agent information retrieval system that achieves efficient and intelligent information retrieval by building agent networks and adopting a ripple search algorithm. This system upgrades the traditional single retrieval mode to a multi-agent collaborative mode, simulating the information dissemination method of human social networks, and improving the relevance and reliability of information retrieval.
