@@ -45,6 +45,13 @@ Synapse is an innovative multi-agent information retrieval system that achieves 
 - **Topology Database**: Stores agent relationship networks
   - Supports multiple backends: Redis, Neo4j, ArangoDB
 
+### 5. Agent Profile
+
+- **Profile Information**: Each agent has a profile containing description and keywords
+- **Profile Management**: Support setting and getting agent profiles
+- **No Result Fallback**: When ripple search finds no relevant content, returns agent profiles
+- **Improved User Experience**: Helps users understand agent expertise and knowledge scope
+
 ## Differences from Traditional Retrieval Models
 
 | Traditional Retrieval Model | Synapse Multi-Agent Retrieval |
@@ -96,6 +103,8 @@ Synapse is an innovative multi-agent information retrieval system that achieves 
   - `ask_with_details(question, limit)`: Search with detailed process
   - `feedback(target_agent_id, is_useful)`: Feedback mechanism
   - `connect(target_agent_id, weight)`: Establish agent connection
+  - `set_profile(description, keywords)`: Set agent profile (description and keywords)
+  - `get_profile()`: Get agent profile information
 
 ### RippleSearcher
 
@@ -107,7 +116,8 @@ Synapse is an innovative multi-agent information retrieval system that achieves 
   4. First round search: Query vector databases of Group A and self
   5. If result confidence is high, return directly; otherwise perform second round search
   6. Second round search: Query vector databases of Group B
-  7. Merge results and return sorted
+  7. If any results found, merge and return sorted results
+  8. If no results found, return agent profiles containing description and keywords
 
 ### Dynamic Weight Management
 
@@ -168,6 +178,21 @@ from synapse.api import Agent
 agent_a = Agent("Finance_Bot")
 agent_b = Agent("Market_Analyst")
 
+# Set agent profiles
+agent_a.set_profile(
+    description="Financial expert agent, specializing in analysis and advice on stocks, bonds, funds and other financial products.",
+    keywords=["stocks", "bonds", "funds", "financial analysis", "investment advice"]
+)
+
+agent_b.set_profile(
+    description="Market analyst agent, good at analyzing market trends, industry dynamics and company financial reports.",
+    keywords=["market analysis", "industry dynamics", "company financial reports", "trend prediction", "data analysis"]
+)
+
+# Get agent profile
+profile = agent_a.get_profile()
+print(f"Agent Profile: {profile}")
+
 # Establish connection
 agent_a.connect("Market_Analyst", 0.9)
 
@@ -176,6 +201,9 @@ agent_a.learn("Apple Inc. Q1 2024 revenue increased by 10%")
 
 # Perform search
 results = agent_a.ask("How is Apple's stock performing?", limit=3)
+
+# When no results found, returns agent profiles
+test_results = agent_a.ask("This is a test question with no matching results", limit=3)
 
 # Feedback mechanism
 agent_a.feedback("Market_Analyst", is_useful=True)
@@ -280,14 +308,21 @@ agent_a.feedback("Market_Analyst", is_useful=True)
 └────────────────────────────┘     └───────────┬─────────────┘
                                                │
 ┌───────────────────────────────────────────────▼─────────────┐
-│  7. Merge Results and Sort                                │
+│  7. Merge Results and Check                               │
 │  - Merge results from both rounds                         │
-│  - Sort by similarity score in descending order           │
+│  - Check if any results found                             │
 └───────────┬────────────────────────────────────────────────┘
             │
-┌───────────▼────────────────────────────────────────────────┐
+┌───────────┴────────────────┐     ┌─────────────────────────┐
+│  Yes: Sort Results         │     │  No: Return Agent Profiles│
+│  - Sort by similarity score in descending order │  - Get all agent IDs     │
+│  - Return top-N results                       │  - Query agent profiles   │
+│                                               │  - Return profile information │
+└───────────┬────────────────┘     └───────────┬─────────────┘
+            │                                   │
+┌───────────▼───────────────────────────────────▼─────────────┐
 │  8. Return Final Results                                  │
-│  - Return SearchResult list                               │
+│  - Return SearchResult list or agent profiles             │
 └────────────────────────────────────────────────────────────┘
 ```
 
