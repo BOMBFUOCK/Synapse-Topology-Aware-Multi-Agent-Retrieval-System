@@ -58,13 +58,13 @@ class Agent:
 
     def learn(self, text: str, metadata: Optional[dict] = None):
         vector = get_embedding(text)
-        point_id = self.vector_client.add_memory(
+        info_id = self.vector_client.add_memory(
             content=text,
             vector=vector,
             owner_id=self.agent_id,
             metadata=metadata
         )
-        return f"Learned: {text} (ID: {point_id})"
+        return f"Learned: {text} (ID: {info_id})"
 
     def ask(self, question: str, limit: int = 10) -> List[SearchResult]:
         results = self.ripple_searcher.search(question, self.agent_id, limit)
@@ -73,6 +73,12 @@ class Agent:
     def ask_with_details(self, question: str, limit: int = 10) -> dict:
         details = self.ripple_searcher.search_with_details(question, self.agent_id, limit)
         return details
+
+    def get_trace(self, info_id: str) -> List[str]:
+        return self.vector_client.get_trace(info_id)
+
+    def get_trace_length(self, info_id: str) -> int:
+        return self.vector_client.get_trace_length(info_id)
 
     def feedback(self, target_agent_id: str, is_useful: bool = True):
         feedback_type = 'positive' if is_useful else 'negative'

@@ -10,8 +10,10 @@ from synapse.utils import get_embedding
 class SearchResult:
     content: str
     source_agent_id: str
+    trace_chain: List[str]
     score: float
     metadata: dict = None
+    info_id: str = None
 
 
 class RippleSearcher:
@@ -64,22 +66,55 @@ class RippleSearcher:
         if first_round_ids:
             results = self.vector_client.query_memory(query_vector, first_round_ids, limit)
             if results and results[0]['score'] >= self.high_confidence_threshold:
-                return [SearchResult(
-                    content=r['content'],
-                    source_agent_id=r['owner_id'],
-                    score=r['score'],
-                    metadata=r.get('metadata')
-                ) for r in results]
+                search_results = []
+                for r in results:
+                    # Initialize trace_chain with source agent ID
+                    trace_chain = [r['owner_id']]
+                    # If the result is from a neighbor, add source_agent_id to trace_chain
+                    if r['owner_id'] != source_agent_id:
+                        trace_chain.insert(0, source_agent_id)
+                    # Add source tool id to metadata
+                    metadata = r.get('metadata', {})
+                    metadata['source_tool_id'] = r['owner_id']
+                    # Record trace to Redis
+                    info_id = r.get('info_id')
+                    if info_id:
+                        self.vector_client.record_trace(info_id, r['content'])
+                    search_results.append(SearchResult(
+                        content=r['content'],
+                        source_agent_id=r['owner_id'],
+                        trace_chain=trace_chain,
+                        score=r['score'],
+                        metadata=metadata,
+                        info_id=info_id
+                    ))
+                return search_results
         
         if group_b:
             results = self.vector_client.query_memory(query_vector, group_b, limit)
             if results:
-                return [SearchResult(
-                    content=r['content'],
-                    source_agent_id=r['owner_id'],
-                    score=r['score'],
-                    metadata=r.get('metadata')
-                ) for r in results]
+                search_results = []
+                for r in results:
+                    # Initialize trace_chain with source agent ID
+                    trace_chain = [r['owner_id']]
+                    # Add source_agent_id to trace_chain since it's a neighbor result
+                    trace_chain.insert(0, source_agent_id)
+                    # Add source tool id to metadata
+                    metadata = r.get('metadata', {})
+                    metadata['source_tool_id'] = r['owner_id']
+                    # Record trace to Redis
+                    info_id = r.get('info_id')
+                    if info_id:
+                        self.vector_client.record_trace(info_id, r['content'])
+                    search_results.append(SearchResult(
+                        content=r['content'],
+                        source_agent_id=r['owner_id'],
+                        trace_chain=trace_chain,
+                        score=r['score'],
+                        metadata=metadata,
+                        info_id=info_id
+                    ))
+                return search_results
         
         # If no results, return agent profiles
         all_agents = self.topology_client.get_all_agents()
@@ -87,11 +122,15 @@ class RippleSearcher:
         for agent_id in all_agents:
             profile = self._get_agent_profile(agent_id)
             content = f"智能体: {agent_id}\n简介: {profile['description']}\n关键词: {', '.join(profile['keywords'])}"
+            # For agent profiles, trace_chain is just the agent itself
+            trace_chain = [source_agent_id]
             profile_results.append(SearchResult(
                 content=content,
                 source_agent_id=agent_id,
+                trace_chain=trace_chain,
                 score=0.0,
-                metadata={"type": "agent_profile"}
+                metadata={"type": "agent_profile", "source_tool_id": agent_id},
+                info_id=None
             ))
         return profile_results
 
@@ -126,12 +165,29 @@ class RippleSearcher:
             details['round'] = 1
             details['searched_ids'] = first_round_ids
             if results and results[0]['score'] >= self.high_confidence_threshold:
-                details['results'] = [SearchResult(
-                    content=r['content'],
-                    source_agent_id=r['owner_id'],
-                    score=r['score'],
-                    metadata=r.get('metadata')
-                ) for r in results]
+                search_results = []
+                for r in results:
+                    # Initialize trace_chain with source agent ID
+                    trace_chain = [r['owner_id']]
+                    # If the result is from a neighbor, add source_agent_id to trace_chain
+                    if r['owner_id'] != source_agent_id:
+                        trace_chain.insert(0, source_agent_id)
+                    # Add source tool id to metadata
+                    metadata = r.get('metadata', {})
+                    metadata['source_tool_id'] = r['owner_id']
+                    # Record trace to Redis
+                    info_id = r.get('info_id')
+                    if info_id:
+                        self.vector_client.record_trace(info_id, r['content'])
+                    search_results.append(SearchResult(
+                        content=r['content'],
+                        source_agent_id=r['owner_id'],
+                        trace_chain=trace_chain,
+                        score=r['score'],
+                        metadata=metadata,
+                        info_id=info_id
+                    ))
+                details['results'] = search_results
                 return details
         
         if group_b:
@@ -139,12 +195,28 @@ class RippleSearcher:
             details['round'] = 2
             details['searched_ids'] = group_b
             if results:
-                details['results'] = [SearchResult(
-                    content=r['content'],
-                    source_agent_id=r['owner_id'],
-                    score=r['score'],
-                    metadata=r.get('metadata')
-                ) for r in results]
+                search_results = []
+                for r in results:
+                    # Initialize trace_chain with source agent ID
+                    trace_chain = [r['owner_id']]
+                    # Add source_agent_id to trace_chain since it's a neighbor result
+                    trace_chain.insert(0, source_agent_id)
+                    # Add source tool id to metadata
+                    metadata = r.get('metadata', {})
+                    metadata['source_tool_id'] = r['owner_id']
+                    # Record trace to Redis
+                    info_id = r.get('info_id')
+                    if info_id:
+                        self.vector_client.record_trace(info_id, r['content'])
+                    search_results.append(SearchResult(
+                        content=r['content'],
+                        source_agent_id=r['owner_id'],
+                        trace_chain=trace_chain,
+                        score=r['score'],
+                        metadata=metadata,
+                        info_id=info_id
+                    ))
+                details['results'] = search_results
                 return details
         
         # If no results, return agent profiles
@@ -153,11 +225,15 @@ class RippleSearcher:
         for agent_id in all_agents:
             profile = self._get_agent_profile(agent_id)
             content = f"智能体: {agent_id}\n简介: {profile['description']}\n关键词: {', '.join(profile['keywords'])}"
+            # For agent profiles, trace_chain is just the agent itself
+            trace_chain = [source_agent_id]
             profile_results.append(SearchResult(
                 content=content,
                 source_agent_id=agent_id,
+                trace_chain=trace_chain,
                 score=0.0,
-                metadata={"type": "agent_profile"}
+                metadata={"type": "agent_profile", "source_tool_id": agent_id},
+                info_id=None
             ))
         
         details['searched_ids'] = []

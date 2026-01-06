@@ -174,8 +174,39 @@ def main():
         print(f"    来源: {result.source_agent_id}")
         print(f"    相似度: {result.score:.4f}")
     
+    print_section("步骤 8: 测试全链路溯源功能")
+    
+    from synapse.utils.visualizer import TraceVisualizer
+    
+    # 直接使用已有的智能体进行测试，确保能够匹配到知识
+    print("\n使用现有智能体进行全链路溯源测试:")
+    print(f"✓ 使用智能体: {agent_a} 和 {agent_b}")
+    
+    # 智能体A向智能体B提问（使用与知识库匹配的问题）
+    question5 = "How was Microsoft's cloud business?"
+    print(f"\n问题: {question5}")
+    
+    results5 = agent_a.ask(question5, limit=3)
+    print(f"\n检索结果 (共 {len(results5)} 条):")
+    
+    # 使用TraceVisualizer展示结果
+    TraceVisualizer.print_trace(results5)
+    
+    # 打印Mermaid流程图
+    if results5:
+        TraceVisualizer.print_mermaid(results5[0].trace_chain)
+    
+    # 额外测试：直接调用search_with_details查看完整链路
+    print("\n\n详细搜索过程:")
+    details = agent_a.ask_with_details(question5, limit=3)
+    print(f"检索轮次: {details['round']}")
+    print(f"搜索的智能体: {details['searched_ids']}")
+    print(f"结果数量: {len(details['results'])}")
+    for i, result in enumerate(details['results'], 1):
+        print(f"\n  结果 {i} 链路: {TraceVisualizer.to_arrow_text(result.trace_chain)}")
+    
     print_section("测试完成")
-
+    
     print("\n✓ 所有测试通过!")
     print("\n系统特性验证:")
     print("  ✓ 双存储架构 (Qdrant + Redis)")
@@ -183,6 +214,7 @@ def main():
     print("  ✓ 动态权重更新")
     print("  ✓ 简单易用的 Agent API")
     print("  ✓ 智能体画像功能")
+    print("  ✓ 全链路溯源功能")
 
 
 if __name__ == "__main__":
