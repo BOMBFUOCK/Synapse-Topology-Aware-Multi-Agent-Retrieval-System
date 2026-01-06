@@ -66,3 +66,6 @@ lerna-debug.log*
 
 # Trae IDE
 .trae/
+
+# Documentation
+guide.md
