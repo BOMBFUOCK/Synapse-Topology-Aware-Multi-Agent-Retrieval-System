@@ -155,21 +155,24 @@ Synapse是一个创新的多智能体信息检索系统，通过构建智能体�
 
 ### 启动依赖服务
 
+1. 配置 Hugging Face 镜像
+```
+创建.env文件并添加以下内容：
+HF_ENDPOINT=https://hf-mirror.com
+```
+
+2. 配置本地docker环境
 ```bash
-# 启动所需数据库（使用Docker Compose）
 docker-compose up -d
 ```
 
-### 运行示例
-
+3. 安装依赖
 ```bash
-# 安装依赖
-./venv/bin/python3 -m pip install -r requirements.txt
+pip install -r requirements.txt
+```
 
-# 安装额外的SOCKS支持（Qdrant客户端需要）
-./venv/bin/python3 -m pip install 'httpx[socks]'
-
-# 运行主程序
+4. 启动程序
+```bash
 ./venv/bin/python3 main.py
 ```
 
