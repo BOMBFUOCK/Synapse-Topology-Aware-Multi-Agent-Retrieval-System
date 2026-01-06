@@ -1,4 +1,5 @@
 import yaml
+import redis
 from typing import List, Dict, Any, Optional
 from qdrant_client import QdrantClient
 from qdrant_client.models import Distance, VectorParams, PointStruct, Filter, FieldCondition, MatchValue
@@ -27,6 +28,15 @@ class VectorDBClient:
         self.collection_name = qdrant_config['collection_name']
         self.vector_size = 384
         
+        # Redis client for trace storage
+        redis_config = config['redis']
+        self.redis_client = redis.Redis(
+            host=redis_config['host'],
+            port=redis_config['port'],
+            db=redis_config['db'],
+            decode_responses=True
+        )
+        
         self._ensure_collection()
         self.initialized = True
 
@@ -40,20 +50,25 @@ class VectorDBClient:
                 vectors_config=VectorParams(size=self.vector_size, distance=Distance.COSINE)
             )
 
+    def _get_trace_key(self, info_id: str) -> str:
+        return f"info:trace:{info_id}"
+
     def add_memory(self, content: str, vector: List[float], owner_id: str, metadata: Optional[Dict[str, Any]] = None):
-        point_id = str(uuid.uuid4())
+        info_id = str(uuid.uuid4())
         
         payload = {
             'content': content,
             'owner_id': owner_id,
+            'info_id': info_id,
             **(metadata or {})
         }
         
         self.client.upsert(
             collection_name=self.collection_name,
-            points=[PointStruct(id=point_id, vector=vector, payload=payload)]
+            points=[PointStruct(id=info_id, vector=vector, payload=payload)]
         )
-        return point_id
+        
+        return info_id
 
     def query_memory(self, query_vector: List[float], owner_id_list: List[str], limit: int = 10) -> List[Dict[str, Any]]:
         if not owner_id_list:
@@ -82,8 +97,9 @@ class VectorDBClient:
             results.append({
                 'content': hit.payload['content'],
                 'owner_id': hit.payload['owner_id'],
+                'info_id': hit.payload.get('info_id'),
                 'score': hit.score,
-                'metadata': {k: v for k, v in hit.payload.items() if k not in ['content', 'owner_id']}
+                'metadata': {k: v for k, v in hit.payload.items() if k not in ['content', 'owner_id', 'info_id']}
             })
         
         return results
@@ -120,12 +136,25 @@ class VectorDBClient:
                 results.append({
                     'content': point.payload['content'],
                     'owner_id': point.payload['owner_id'],
-                    'metadata': {k: v for k, v in point.payload.items() if k not in ['content', 'owner_id']}
+                    'info_id': point.payload.get('info_id'),
+                    'metadata': {k: v for k, v in point.payload.items() if k not in ['content', 'owner_id', 'info_id']}
                 })
             
             offset = points[-1].id
         
         return results
+
+    def record_trace(self, info_id: str, content: str):
+        trace_key = self._get_trace_key(info_id)
+        self.redis_client.rpush(trace_key, content)
+
+    def get_trace(self, info_id: str) -> List[str]:
+        trace_key = self._get_trace_key(info_id)
+        return self.redis_client.lrange(trace_key, 0, -1)
+
+    def get_trace_length(self, info_id: str) -> int:
+        trace_key = self._get_trace_key(info_id)
+        return self.redis_client.llen(trace_key)
 
     def clear(self):
         self.client.delete_collection(self.collection_name)

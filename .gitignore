@@ -63,3 +63,9 @@ lerna-debug.log*
 # Docker
 .dockerignore
 *.dockerignore
+
+# Trae IDE
+.trae/
+
+# Documentation
+guide.md

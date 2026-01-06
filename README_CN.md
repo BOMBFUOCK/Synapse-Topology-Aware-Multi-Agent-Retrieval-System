@@ -1,9 +1,9 @@
 <div align="center">
-  <img src="https://img.shields.io/github/stars/BOMBFUOCK/Multi-Agent-RAG-Synapse?style=social" alt="GitHub Stars" />
-  <img src="https://img.shields.io/github/forks/BOMBFUOCK/Multi-Agent-RAG-Synapse?style=social" alt="GitHub Forks" />
-  <img src="https://img.shields.io/github/watchers/BOMBFUOCK/Multi-Agent-RAG-Synapse?style=social" alt="GitHub Watchers" />
-  <img src="https://img.shields.io/github/issues/BOMBFUOCK/Multi-Agent-RAG-Synapse" alt="GitHub Issues" />
-  <img src="https://img.shields.io/github/issues-closed/BOMBFUOCK/Multi-Agent-RAG-Synapse" alt="GitHub Closed Issues" />
+  <img src="https://img.shields.io/github/stars/BOMBFUOCK/Multi-Agent-RAG-Synapse?style=social&cacheSeconds=3600" alt="GitHub Stars" />
+  <img src="https://img.shields.io/github/forks/BOMBFUOCK/Multi-Agent-RAG-Synapse?style=social&cacheSeconds=3600" alt="GitHub Forks" />
+  <img src="https://img.shields.io/github/watchers/BOMBFUOCK/Multi-Agent-RAG-Synapse?style=social&cacheSeconds=3600" alt="GitHub Watchers" />
+  <img src="https://img.shields.io/github/issues/BOMBFUOCK/Multi-Agent-RAG-Synapse?cacheSeconds=3600" alt="GitHub Issues" />
+  <img src="https://img.shields.io/github/issues-closed/BOMBFUOCK/Multi-Agent-RAG-Synapse?cacheSeconds=3600" alt="GitHub Closed Issues" />
 </div>
 
 <div align="center">
@@ -44,6 +44,13 @@ Synapse是一个创新的多智能体信息检索系统，通过构建智能体�
   - 支持多种后端：Qdrant、Milvus、Weaviate、ChromaDB、pgvector
 - **拓扑数据库**：存储智能体关系网络
   - 支持多种后端：Redis、Neo4j、ArangoDB
+
+### 5. 智能体画像
+
+- **画像信息**：每个智能体包含简介和关键词摘要
+- **画像管理**：支持设置和获取智能体画像
+- **无结果回退**：当涟漪搜索没有找到相关内容时，返回智能体画像
+- **提升用户体验**：帮助用户了解智能体的专业领域和知识范围
 
 ## 与传统检索模式的区别
 
@@ -96,6 +103,8 @@ Synapse是一个创新的多智能体信息检索系统，通过构建智能体�
   - `ask_with_details(question, limit)`：带详细过程的搜索
   - `feedback(target_agent_id, is_useful)`：反馈机制
   - `connect(target_agent_id, weight)`：建立智能体连接
+  - `set_profile(description, keywords)`：设置智能体画像（简介和关键词）
+  - `get_profile()`：获取智能体画像信息
 
 ### RippleSearcher（涟漪搜索器）
 
@@ -107,7 +116,8 @@ Synapse是一个创新的多智能体信息检索系统，通过构建智能体�
   4. 第一轮搜索：查询A组和自身的向量数据库
   5. 若结果置信度高，直接返回；否则执行第二轮搜索
   6. 第二轮搜索：查询B组的向量数据库
-  7. 合并结果并排序返回
+  7. 若找到结果，合并并排序返回
+  8. 若没有找到结果，返回智能体画像，包含简介和关键词
 
 ### 动态权重管理
 
@@ -130,16 +140,176 @@ Synapse是一个创新的多智能体信息检索系统，通过构建智能体�
 ### 向量数据库
 
 1. Qdrant
-2. Milvus
-3. Weaviate
-4. ChromaDB
-5. pgvector
+
 
 ### 拓扑/图数据库
 
 1. Redis
-2. Neo4j
-3. ArangoDB
+
+
+### 传播路径存储
+
+#### 核心思想
+
+**以信息为主体的传播路径记录**是系统的核心设计理念之一，其核心思想是：
+
+- **信息中心**：将每条信息作为独立实体，贯穿其整个生命周期
+- **完整追踪**：记录信息从创建到传播的完整路径
+- **可观测性**：提供信息在智能体网络中的流动可视化
+- **可审计性**：支持追溯信息的来源和传播历史
+
+该设计的价值在于：
+- 提升系统的可观测性，便于调试和优化
+- 支持信息传播分析，发现网络中的关键节点
+- 提供审计能力，确保信息来源可追溯
+- 支持复杂场景下的信息流动分析
+
+#### 实现细节
+
+系统实现了以**信息**为主体的传播路径存储，在Redis中记录每条信息在智能体网络中的完整传播路径：
+
+**数据结构设计：**
+
+- **键名格式**：`info:trace:{info_id}`
+- **数据类型**：Redis List
+- **内容**：按时间顺序存储信息内容本身
+- **示例**：
+  ```
+  RPUSH info:trace:uuid-123 "微软收购了一家初创公司..."
+  RPUSH info:trace:uuid-123 "微软收购了一家初创公司..." (第二次传播)
+  ```
+
+**信息ID生成：**
+
+- 当智能体调用`learn()`方法存储新信息时，为信息生成唯一ID（UUID）
+- `info_id`作为元数据存储在向量数据库中
+- 搜索结果返回时包含`info_id`
+
+**传播路径记录流程：**
+
+1. 用户/智能体A发起搜索请求
+2. RippleSearcher查询向量数据库
+3. 获取包含`info_id`和`content`的搜索结果
+4. 将`content`追加到Redis List: `info:trace:{info_id}`
+5. 将结果返回给用户/智能体A
+
+**查询示例：**
+
+```python
+# 获取特定信息的完整传播路径
+trace = redis_client.lrange("info:trace:uuid-1234", 0, -1)
+
+# 获取传播路径长度（传播次数）
+length = redis_client.llen("info:trace:uuid-1234")
+
+# 获取最近5条传播记录
+latest = redis_client.lrange("info:trace:uuid-1234", -5, -1)
+```
+
+**传播路径管理工具：**
+
+- `InfoTraceManager`：提供传播路径查询和管理功能
+- `get_trace(info_id)`：获取特定信息的完整传播路径
+- `get_trace_length(info_id)`：获取传播次数
+- `print_trace_info(info_id)`：打印格式化的传播路径信息
+
+#### 实现架构
+
+传播路径存储功能的实现架构与系统其他组件紧密集成：
+
+```
+┌───────────────────────────────────────────────────────────────┐
+│                      系统架构                                │
+├─────────┬─────────┬───────────────────────────────────────────┤
+│  Agent  │         │  核心组件                               │
+│  API    │         ├─────────────────────┬─────────────────────┤
+│         │         │  检索引擎          │  数据存储           │
+└─────────┴─────────┼─────────────────────┼─────────────────────┘
+                    │  ▲                 │  ▲
+                    │  │                 │  │
+                    ▼  │                 ▼  │
+┌───────────────────────────────────────────────────────────────┐
+│                  RippleSearcher（涟漪搜索器）                │
+└───────────────────────────────────────────────────────────────┘
+                    │  ▲                 │  ▲
+                    │  │                 │  │
+                    ▼  │                 ▼  │
+┌───────────────────────────────────────────────────────────────┐
+│  VectorDBClient（向量数据库客户端）  │  TopologyClient（拓扑客户端） │
+│  └─── 添加info_id生成和存储            │  └─── 管理智能体关系网络     │
+└───────────────────────────────────────────────────────────────┘
+                    │                      │
+                    ▼                      ▼
+┌─────────────────────────┐    ┌───────────────────────────┐
+│  向量数据库             │    │  Redis拓扑数据库          │
+│  存储信息内容和info_id   │    │  存储智能体关系和传播路径  │
+└─────────────────────────┘    └───────────────────────────┘
+```
+
+**技术选型考虑：**
+
+- **Redis List**：选择Redis List作为存储结构，因为它天然支持按时间顺序追加元素，适合记录传播路径
+- **UUID**：使用UUID作为信息ID，确保全球唯一性
+- **集成设计**：与现有系统紧密集成，无需额外的存储服务
+
+#### 代码实现要点
+
+**关键代码位置：**
+
+1. **向量数据库客户端** (`synapse/core/db/vector_client.py`)：
+   - 生成和存储`info_id`
+   - 实现传播路径的记录和查询方法
+
+2. **涟漪搜索器** (`synapse/core/retriever/ripple_search.py`)：
+   - 在搜索结果返回前记录传播路径
+   - 确保`info_id`传递到最终结果
+
+3. **智能体API** (`synapse/api.py`)：
+   - 暴露传播路径查询接口
+   - 整合传播路径管理功能
+
+4. **传播路径管理工具** (`synapse/utils/trace_manager.py`)：
+   - 提供高级查询和可视化功能
+
+**重要设计决策：**
+
+- **延迟加载**：传播路径记录在搜索完成后异步记录，不影响搜索性能
+- **数据压缩**：对于重复内容，仅记录引用而非完整内容（当前实现为完整内容，可根据需求优化）
+- **可扩展设计**：支持未来添加更复杂的传播路径分析功能
+
+#### 应用场景和价值
+
+传播路径存储功能在多种场景下具有重要价值：
+
+##### 1. 系统调试和优化
+
+- **问题定位**：当系统出现异常或返回错误结果时，可以通过传播路径追溯信息来源和传播过程
+- **性能优化**：分析信息传播路径，发现网络中的瓶颈和低效节点
+- **调试辅助**：提供完整的信息流动路径，便于开发者调试复杂的智能体交互
+
+##### 2. 信息传播分析
+
+- **传播范围分析**：了解一条信息在智能体网络中的传播广度和深度
+- **关键节点识别**：发现网络中最活跃的信息传播节点
+- **传播模式发现**：分析信息传播的模式和规律
+
+##### 3. 审计和合规
+
+- **来源追溯**：确保每条信息的来源可追溯，符合合规要求
+- **传播审计**：记录信息的完整传播历史，支持审计需求
+- **责任追溯**：在出现问题时，可以追溯到相关的智能体和传播路径
+
+##### 4. 复杂场景支持
+
+- **多轮对话**：支持多轮对话场景下的信息流动分析
+- **跨智能体协作**：支持复杂协作场景下的信息追踪
+- **动态网络**：适应智能体网络动态变化的情况
+
+##### 5. 智能体网络优化
+
+- **关系网络调整**：根据传播路径分析结果，优化智能体间的信任关系
+- **智能体能力评估**：基于信息传播效果，评估智能体的性能和价值
+- **网络拓扑优化**：根据传播路径分析，优化智能体网络的拓扑结构
 
 ## 快速开始
 
@@ -175,14 +345,32 @@ from synapse.api import Agent
 agent_a = Agent("Finance_Bot")
 agent_b = Agent("Market_Analyst")
 
+# 设置智能体画像
+agent_a.set_profile(
+    description="金融专家智能体，专注于股票、债券、基金等金融产品的分析和建议。",
+    keywords=["股票", "债券", "基金", "金融分析", "投资建议"]
+)
+
+agent_b.set_profile(
+    description="市场分析师智能体，擅长分析市场趋势、行业动态和公司财报。",
+    keywords=["市场分析", "行业动态", "公司财报", "趋势预测", "数据分析"]
+)
+
+# 获取智能体画像
+profile = agent_a.get_profile()
+print(f"智能体画像: {profile}")
+
 # 建立连接
 agent_a.connect("Market_Analyst", 0.9)
 
 # 学习知识
-agent_a.learn("苹果公司2024年Q1营收增长10%")
+agent_a.learn("Apple Inc. 2024年第一季度收入增长10%")
 
 # 执行搜索
 results = agent_a.ask("苹果公司股票表现如何？", limit=3)
+
+# 当没有结果时，返回智能体画像
+test_results = agent_a.ask("这是一个没有匹配结果的测试问题", limit=3)
 
 # 反馈机制
 agent_a.feedback("Market_Analyst", is_useful=True)
@@ -287,14 +475,21 @@ agent_a.feedback("Market_Analyst", is_useful=True)
 └────────────────────────────┘     └───────────┬─────────────┘
                                                │
 ┌───────────────────────────────────────────────▼─────────────┐
-│  7. 合并结果并排序                                         │
+│  7. 合并结果并检查                                         │
 │  - 合并两轮搜索结果                                        │
-│  - 按相似度得分降序排列                                    │
+│  - 检查是否找到任何结果                                    │
 └───────────┬────────────────────────────────────────────────┘
             │
-┌───────────▼────────────────────────────────────────────────┐
+┌───────────┴────────────────┐     ┌─────────────────────────┐
+│  是: 排序结果              │     │  否: 返回智能体画像     │
+│  - 按相似度得分降序排列    │     │  - 获取所有智能体ID     │
+│  - 返回top-N结果           │     │  - 查询智能体画像       │
+│                            │     │  - 返回画像信息         │
+└───────────┬────────────────┘     └───────────┬─────────────┘
+            │                                   │
+┌───────────▼───────────────────────────────────▼─────────────┐
 │  8. 返回最终结果                                           │
-│  - 返回 SearchResult 列表                                  │
+│  - 返回 SearchResult 列表或智能体画像                      │
 └────────────────────────────────────────────────────────────┘
 ```
 

@@ -1,9 +1,9 @@
 <div align="center">
-  <img src="https://img.shields.io/github/stars/BOMBFUOCK/Multi-Agent-RAG-Synapse?style=social" alt="GitHub Stars" />
-  <img src="https://img.shields.io/github/forks/BOMBFUOCK/Multi-Agent-RAG-Synapse?style=social" alt="GitHub Forks" />
-  <img src="https://img.shields.io/github/watchers/BOMBFUOCK/Multi-Agent-RAG-Synapse?style=social" alt="GitHub Watchers" />
-  <img src="https://img.shields.io/github/issues/BOMBFUOCK/Multi-Agent-RAG-Synapse" alt="GitHub Issues" />
-  <img src="https://img.shields.io/github/issues-closed/BOMBFUOCK/Multi-Agent-RAG-Synapse" alt="GitHub Closed Issues" />
+  <img src="https://img.shields.io/github/stars/BOMBFUOCK/Multi-Agent-RAG-Synapse?style=social&cacheSeconds=3600" alt="GitHub Stars" />
+  <img src="https://img.shields.io/github/forks/BOMBFUOCK/Multi-Agent-RAG-Synapse?style=social&cacheSeconds=3600" alt="GitHub Forks" />
+  <img src="https://img.shields.io/github/watchers/BOMBFUOCK/Multi-Agent-RAG-Synapse?style=social&cacheSeconds=3600" alt="GitHub Watchers" />
+  <img src="https://img.shields.io/github/issues/BOMBFUOCK/Multi-Agent-RAG-Synapse?cacheSeconds=3600" alt="GitHub Issues" />
+  <img src="https://img.shields.io/github/issues-closed/BOMBFUOCK/Multi-Agent-RAG-Synapse?cacheSeconds=3600" alt="GitHub Closed Issues" />
 </div>
 
 <div align="center">
@@ -44,6 +44,13 @@ Synapse is an innovative multi-agent information retrieval system that achieves 
   - Supports multiple backends: Qdrant, Milvus, Weaviate, ChromaDB, pgvector
 - **Topology Database**: Stores agent relationship networks
   - Supports multiple backends: Redis, Neo4j, ArangoDB
+
+### 5. Agent Profile
+
+- **Profile Information**: Each agent has a profile containing description and keywords
+- **Profile Management**: Support setting and getting agent profiles
+- **No Result Fallback**: When ripple search finds no relevant content, returns agent profiles
+- **Improved User Experience**: Helps users understand agent expertise and knowledge scope
 
 ## Differences from Traditional Retrieval Models
 
@@ -96,6 +103,8 @@ Synapse is an innovative multi-agent information retrieval system that achieves 
   - `ask_with_details(question, limit)`: Search with detailed process
   - `feedback(target_agent_id, is_useful)`: Feedback mechanism
   - `connect(target_agent_id, weight)`: Establish agent connection
+  - `set_profile(description, keywords)`: Set agent profile (description and keywords)
+  - `get_profile()`: Get agent profile information
 
 ### RippleSearcher
 
@@ -107,7 +116,8 @@ Synapse is an innovative multi-agent information retrieval system that achieves 
   4. First round search: Query vector databases of Group A and self
   5. If result confidence is high, return directly; otherwise perform second round search
   6. Second round search: Query vector databases of Group B
-  7. Merge results and return sorted
+  7. If any results found, merge and return sorted results
+  8. If no results found, return agent profiles containing description and keywords
 
 ### Dynamic Weight Management
 
@@ -135,6 +145,171 @@ The system provides professional domain knowledge bases for each agent, includin
 ### Topology/Graph Databases
 
 1. Redis
+
+
+### Trace Chain Storage
+
+#### Core Concepts
+
+**Information-centric trace chain recording** is one of the system's core design principles, with the following key ideas:
+
+- **Information-centric**: Treat each piece of information as an independent entity throughout its lifecycle
+- **Complete tracking**: Record the full path of information from creation to propagation
+- **Observability**: Provide visualization of information flow in the agent network
+- **Auditability**: Support tracing the source and propagation history of information
+
+The value of this design lies in:
+- Improved system observability for debugging and optimization
+- Support for information propagation analysis to identify key nodes in the network
+- Audit capabilities ensuring information source traceability
+- Support for information flow analysis in complex scenarios
+
+#### Implementation Details
+
+The system implements information-centric trace chain storage in Redis, capturing the complete propagation path of each piece of information:
+
+**Data Structure:**
+
+- **Key Format**: `info:trace:{info_id}`
+- **Type**: Redis List
+- **Content**: Stores information content in chronological order
+- **Example**:
+  ```
+  RPUSH info:trace:uuid-123 "Microsoft acquired a startup..."
+  RPUSH info:trace:uuid-123 "Microsoft acquired a startup..." (second propagation)
+  ```
+
+**Information ID Generation:**
+
+- Generated using UUID v4 when `learn()` is called
+- Stored as metadata in vector database
+- Returned with search results
+
+**Trace Recording Flow:**
+
+1. User/Agent A initiates search request
+2. RippleSearcher queries vector database
+3. Gets search results containing `info_id` and `content`
+4. Appends `content` to Redis List: `info:trace:{info_id}`
+5. Returns results to user/Agent A
+
+**Query Examples:**
+
+```python
+# Get complete propagation path for specific information
+trace = redis_client.lrange("info:trace:uuid-1234", 0, -1)
+
+# Get propagation path length
+length = redis_client.llen("info:trace:uuid-1234")
+
+# Get latest 5 propagation records
+latest = redis_client.lrange("info:trace:uuid-1234", -5, -1)
+```
+
+**Trace Management Tools:**
+
+- `InfoTraceManager`: Provides trace query and management functionality
+- `get_trace(info_id)`: Get complete propagation path
+- `get_trace_length(info_id)`: Get propagation count
+- `print_trace_info(info_id)`: Print formatted trace information
+
+#### Implementation Architecture
+
+The implementation architecture of trace chain storage is closely integrated with other system components:
+
+```
+┌───────────────────────────────────────────────────────────────┐
+│                      System Architecture                    │
+├─────────┬─────────┬───────────────────────────────────────────┤
+│  Agent  │         │  Core Components                          │
+│  API    │         ├─────────────────────┬─────────────────────┤
+│         │         │  Retrieval Engine   │  Data Storage       │
+└─────────┴─────────┼─────────────────────┼─────────────────────┘
+                    │  ▲                 │  ▲
+                    │  │                 │  │
+                    ▼  │                 ▼  │
+┌───────────────────────────────────────────────────────────────┐
+│                  RippleSearcher                              │
+└───────────────────────────────────────────────────────────────┘
+                    │  ▲                 │  ▲
+                    │  │                 │  │
+                    ▼  │                 ▼  │
+┌───────────────────────────────────────────────────────────────┐
+│  VectorDBClient                     TopologyClient            │
+│  └─── Add info_id generation and storage   │  └─── Manage agent relationship network     │
+└───────────────────────────────────────────────────────────────┘
+                    │                      │
+                    ▼                      ▼
+┌─────────────────────────┐    ┌───────────────────────────┐
+│  Vector Database        │    │  Redis Topology Database  │
+│  Store content and info_id │    │  Store agent relations and trace chains  │
+└─────────────────────────┘    └───────────────────────────┘
+```
+
+**Technology Selection Considerations:**
+
+- **Redis List**: Redis List is chosen as the storage structure because it naturally supports appending elements in chronological order, suitable for recording propagation paths
+- **UUID**: UUID is used as the information ID to ensure global uniqueness
+- **Integrated Design**: Closely integrated with the existing system, no additional storage services required
+
+#### Code Implementation Points
+
+**Key Code Locations:**
+
+1. **Vector Database Client** (`synapse/core/db/vector_client.py`):
+   - Generate and store `info_id`
+   - Implement trace recording and query methods
+
+2. **Ripple Searcher** (`synapse/core/retriever/ripple_search.py`):
+   - Record trace chain before returning search results
+   - Ensure `info_id` is passed to final results
+
+3. **Agent API** (`synapse/api.py`):
+   - Expose trace chain query interfaces
+   - Integrate trace management functionality
+
+4. **Trace Management Tools** (`synapse/utils/trace_manager.py`):
+   - Provide advanced query and visualization features
+
+**Important Design Decisions:**
+
+- **Lazy Loading**: Trace chain recording is performed asynchronously after search completion, without affecting search performance
+- **Data Compression**: For duplicate content, only references are recorded instead of complete content (current implementation uses complete content, can be optimized as needed)
+- **Extensible Design**: Supports adding more complex trace chain analysis features in the future
+
+#### Application Scenarios and Value
+
+The trace chain storage feature has important value in various scenarios:
+
+##### 1. System Debugging and Optimization
+
+- **Issue Localization**: When the system encounters exceptions or returns incorrect results, the propagation path can be traced to identify the source and process
+- **Performance Optimization**: Analyze information propagation paths to identify bottlenecks and inefficient nodes in the network
+- **Debugging Assistance**: Provide complete information flow paths for developers to debug complex agent interactions
+
+##### 2. Information Propagation Analysis
+
+- **Propagation Scope Analysis**: Understand the breadth and depth of information propagation in the agent network
+- **Key Node Identification**: Discover the most active information propagation nodes in the network
+- **Propagation Pattern Discovery**: Analyze patterns and规律 of information propagation
+
+##### 3. Audit and Compliance
+
+- **Source Tracing**: Ensure each piece of information's source is traceable, meeting compliance requirements
+- **Propagation Audit**: Record complete information propagation history to support audit needs
+- **Responsibility Tracing**: In case of issues, trace to relevant agents and propagation paths
+
+##### 4. Complex Scenario Support
+
+- **Multi-turn Dialogue**: Support information flow analysis in multi-turn dialogue scenarios
+- **Cross-agent Collaboration**: Support information tracking in complex collaboration scenarios
+- **Dynamic Network**: Adapt to dynamic changes in the agent network
+
+##### 5. Agent Network Optimization
+
+- **Relationship Network Adjustment**: Optimize trust relationships between agents based on trace analysis results
+- **Agent Capability Evaluation**: Evaluate agent performance and value based on information propagation effects
+- **Network Topology Optimization**: Optimize agent network topology based on trace analysis
 
 
 ## Quick Start
@@ -168,6 +343,21 @@ from synapse.api import Agent
 agent_a = Agent("Finance_Bot")
 agent_b = Agent("Market_Analyst")
 
+# Set agent profiles
+agent_a.set_profile(
+    description="Financial expert agent, specializing in analysis and advice on stocks, bonds, funds and other financial products.",
+    keywords=["stocks", "bonds", "funds", "financial analysis", "investment advice"]
+)
+
+agent_b.set_profile(
+    description="Market analyst agent, good at analyzing market trends, industry dynamics and company financial reports.",
+    keywords=["market analysis", "industry dynamics", "company financial reports", "trend prediction", "data analysis"]
+)
+
+# Get agent profile
+profile = agent_a.get_profile()
+print(f"Agent Profile: {profile}")
+
 # Establish connection
 agent_a.connect("Market_Analyst", 0.9)
 
@@ -176,6 +366,9 @@ agent_a.learn("Apple Inc. Q1 2024 revenue increased by 10%")
 
 # Perform search
 results = agent_a.ask("How is Apple's stock performing?", limit=3)
+
+# When no results found, returns agent profiles
+test_results = agent_a.ask("This is a test question with no matching results", limit=3)
 
 # Feedback mechanism
 agent_a.feedback("Market_Analyst", is_useful=True)
@@ -280,14 +473,21 @@ agent_a.feedback("Market_Analyst", is_useful=True)
 └────────────────────────────┘     └───────────┬─────────────┘
                                                │
 ┌───────────────────────────────────────────────▼─────────────┐
-│  7. Merge Results and Sort                                │
+│  7. Merge Results and Check                               │
 │  - Merge results from both rounds                         │
-│  - Sort by similarity score in descending order           │
+│  - Check if any results found                             │
 └───────────┬────────────────────────────────────────────────┘
             │
-┌───────────▼────────────────────────────────────────────────┐
+┌───────────┴────────────────┐     ┌─────────────────────────┐
+│  Yes: Sort Results         │     │  No: Return Agent Profiles│
+│  - Sort by similarity score in descending order │  - Get all agent IDs     │
+│  - Return top-N results                       │  - Query agent profiles   │
+│                                               │  - Return profile information │
+└───────────┬────────────────┘     └───────────┬─────────────┘
+            │                                   │
+┌───────────▼───────────────────────────────────▼─────────────┐
 │  8. Return Final Results                                  │
-│  - Return SearchResult list                               │
+│  - Return SearchResult list or agent profiles             │
 └────────────────────────────────────────────────────────────┘
 ```
 
